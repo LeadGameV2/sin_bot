@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:14
+    environment:
+      - TZ:"Europe/Moscow"
+      - PGTZ:"Europe/Moscow"
+      - POSTGRES_DB=${POSTGRES_DB_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+    volumes:
+      - ./db_data:/var/lib/postgresql/data/
+      - ./postgres/init_posgres_db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - 5432:5432
+    restart: on-failure
+
+  sin_bot:
+    build: ./bot
+    command: bash -c "python main.py"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    restart: on-failure
