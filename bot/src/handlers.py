@@ -1,14 +1,18 @@
+import os
 from loguru import logger
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, constants
 from telegram.ext import ContextTypes, CallbackContext
 
 import psycopg2
 
-from src import prompts
+from src import prompts, quiz_questions
 from src.states import UserStateEnum, UserStates
 from settings import settings
 
 user_state = UserStates()
+
+user_scores = {}
+
 
 
 def db_request(query: str, fetch: bool = False):
@@ -44,6 +48,9 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     logger.info(f"START with {chat_id}")
 
+    user_id = update.effective_chat.id
+    user_scores[user_id] = {"score": 0}
+
     q = f"""INSERT INTO sins.users (id, chat_id, nickname, created, modified) 
     VALUES (gen_random_uuid(), {chat_id}, '{update.effective_user.username}', NOW(), NOW());"""
     db_request(q)
@@ -76,6 +83,9 @@ async def ask_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
             ],
             [
                 InlineKeyboardButton("Лучшие грехи 💯", callback_data="top"),
+            ],
+            [
+                InlineKeyboardButton("Пройти Квиз 🎲", callback_data="quiz"),
             ]
         ]
     )
@@ -195,12 +205,139 @@ async def vote(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=reply_markup
         )
 
+async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE, question_idx: int):
+    # check if there's score already
+    user_id = update.effective_chat.id
+    if question_idx == 0 and user_scores[user_id]["score"] > 0:
+            score = user_scores[user_id]["score"]
+            query = update.callback_query
+            await update.callback_query.message.reply_text(
+                "Ты уже прошёл квиз 🎉 \n ")
+            if score >= 10:
+                await query.message.reply_text(    
+                    "🔥 Ты грешник 10 уровня 🔥 \n ")
+                path = (os.getcwd() + r'\src\images\sin10.png')
+                await query.message.reply_photo(photo=open(path, 'rb'))
+                await ask_choice(update, context)
+            elif score >=7:
+                await query.message.reply_text(
+                    "🩸 Ты грешник 7 уровня \n ")
+                path = (os.getcwd() + r'\src\images\sin7.png')
+                await query.message.reply_photo(photo=open(path, 'rb'))
+                await ask_choice(update, context)
+            elif score >=3:
+                await query.message.reply_text(
+                    "😈 Ты грешник 3 уровня \n ")
+                path = (os.getcwd() + r'\src\images\sin3.png')
+                await query.message.reply_photo(photo=open(path, 'rb'))
+                await ask_choice(update, context)
+            elif score >=0:
+                await query.message.reply_text(
+                    "🕊 Ты грешник 0 уровня")
+                path = (os.getcwd() + r'\src\images\sin0.png')
+                await query.message.reply_photo(photo=open(path, 'rb'))
+                await ask_choice(update, context)
+        
+    else:    
+    # start quiz
+        if question_idx == 0:
+            await update.callback_query.message.reply_text("🩸 Привет, грешник.\n\n"
+            "Сними с себя Agile-маску — тут никто не святой. \n"
+            "Пора узнать правду: "
+            "на каком уровне продуктового ада ты застрял. \n\n"
+            "Запускал фичу без ресёрча? \n"
+            "Врал про метрики? \n"
+            "Шарил не тот экран на демо? \n\n"
+            "Пройди тест и узнай, ждёт ли тебя светлый онбординг… или вечная ретроспектива с дьяволом.")
+        
+        # quiz questions by index
+        question_data = quiz_questions.QUIZ_QUESTIONS[question_idx]
+        keyboard = [] 
+        for i, option in enumerate(question_data["options"]):
+            keyboard.append([InlineKeyboardButton(option, callback_data=f"q{question_idx}_{i}")])
+            
+        
+        await context.bot.send_message(
+                chat_id=update.effective_chat.id, text=f"Вопрос {question_idx + 1}: {question_data['question']}",
+                reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+
 async def button_callback(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
 
+
+
     if query.data == 'create':
         await create_sin(update, context)
+
+    # Checking quiz answers
+    elif  "_" in query.data:
+        data = query.data.split("_")
+        question_idx = int(data[0][1:])
+        selected_option = int(data[1])
+
+        user_id = update.effective_chat.id
+        user_scores[user_id]["score"] += (selected_option)
+        await query.delete_message()
+
+        # Move to the next question or end the quiz
+        next_question_idx = question_idx + 1
+        if next_question_idx < len(quiz_questions.QUIZ_QUESTIONS):
+            await quiz(update, context, next_question_idx)
+        else:
+            score = user_scores[user_id]["score"]
+            if score >= 10:
+                await query.message.reply_text(    
+                    "🔥 Ты грешник 10 уровня 🔥 \n"
+                    "Аркан котлов с раскалённым маслом в самом пекле ада \n\n"
+                    "Поздравляем! Ты официально достиг уровня, где кофе из корпоративной кухни заменяется лавой, а созвоны идут в аду — навсегда. \n"
+                    "Ты лгал в метриках, пускал фичи без тестов, копировал чужие UI и делал вид, что это «инсайты». \n"
+                    "Но есть шанс… тоненький… как твой roadmap. \n\n"
+                    "Напиши свои грехи этому боту — \n"
+                    "и, может быть, алгоритмы небесного CI/CD отправят тебе горячий pull request с прощением.")
+                path = (os.getcwd() + r'\src\images\sin10.png')
+                await query.message.reply_photo(photo=open(path, 'rb'))
+                await ask_choice(update, context)
+            elif score >=7:
+                await query.message.reply_text(
+                    "🩸 Ты грешник 7 уровня \n"
+                    "Аркан средневековых пыток \n\n"
+                    "Ты ещё не кипишь в котле, но уже крепко привязан к доске с гвоздями корпоративной боли. \n"
+                    "Твоя душа покрыта тёмными пятнами: ты шарил не ту вкладку, ворчал на дизайнеров, а ретроспективу заменил планированием без планов. \n"
+                    "И всё же — в тебе есть искра света. Где-то глубоко. Под слоями фич без ресёрча. \n\n"
+                    "Напиши свои грехи этому боту — и, быть может, вместо вечного менторства от демона-скрамастера, тебе дадут второй шанс.")
+                path = (os.getcwd() + r'\src\images\sin7.png')
+                await query.message.reply_photo(photo=open(path, 'rb'))
+                await ask_choice(update, context)
+            elif score >=3:
+                await query.message.reply_text(
+                    "😈 Ты грешник 3 уровня \n"
+                    "Аркан плохой мальчик\\девочка \n\n"
+                    "Ты умеешь играть чисто... но не всегда хочешь. \n"
+                    "Ты хранишь в себе баги прошлого, спрятанные между дедлайнами и флиртующими комментариями в таск-трекере. \n"
+                    "Тебе чуть-чуть больно — и чуть-чуть приятно. В твоём backlog'е есть то, о чём лучше молчать. \n\n"
+                    "Секретики? \n"
+                    "Скелеты в шкафу есть и у тебя. \n\n"
+                    "Расскажи об этом боту. Он — как продакт: притворится, что не осуждает.")
+                path = (os.getcwd() + r'\src\images\sin3.png')
+                await query.message.reply_photo(photo=open(path, 'rb'))
+                await ask_choice(update, context)
+            elif score >=0:
+                await query.message.reply_text(
+                    "🕊 Ты грешник 0 уровня: Аркан Белая ворона \n\n"
+                    "Ты сияешь, как ретроспектива без обвинений. \n"
+                    "Ты пришёл в этот мир нести свет продуктового смысла и умеренные сроки. \n"
+                    "Твой backlog структурирован, а метрики прозрачны, как твоя душа. \n\n"
+                    "Лик святой. Иди с миром, сын божий продакт-менеджмента. \n"
+                    "Но если ты всё же однажды… случайно… поделал отчёт — напиши об этом боту."
+                    "Даже святые иногда пушат не в ту ветку.")
+                path = (os.getcwd() + r'\src\images\sin0.png')
+                await query.message.reply_photo(photo=open(path, 'rb'))
+                await ask_choice(update, context)
+
+
 
     elif query.data == 'vote':
         await vote(update, context)
@@ -210,6 +347,10 @@ async def button_callback(update: Update, context: CallbackContext) -> None:
 
     elif query.data == 'top':
         await top_sins(update, context)
+
+    elif query.data == 'quiz':
+        # start new quiz with index 0
+        await quiz(update, context, 0)
 
     elif query.data.startswith("page_"):
         page = int(query.data.split("_")[1])
