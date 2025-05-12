@@ -216,25 +216,25 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE, question_idx:
             if score >= 10:
                 await query.message.reply_text(    
                     "🔥 Ты грешник 10 уровня 🔥 \n ")
-                path = (os.getcwd() + r'\src\images\sin10.png')
+                path = (os.getcwd() + r'/src/images/sin10.png')
                 await query.message.reply_photo(photo=open(path, 'rb'))
                 await ask_choice(update, context)
             elif score >=7:
                 await query.message.reply_text(
                     "🩸 Ты грешник 7 уровня \n ")
-                path = (os.getcwd() + r'\src\images\sin7.png')
+                path = (os.getcwd() + r'/src/images/sin7.png')
                 await query.message.reply_photo(photo=open(path, 'rb'))
                 await ask_choice(update, context)
             elif score >=3:
                 await query.message.reply_text(
                     "😈 Ты грешник 3 уровня \n ")
-                path = (os.getcwd() + r'\src\images\sin3.png')
+                path = (os.getcwd() + r'/src/images/sin3.png')
                 await query.message.reply_photo(photo=open(path, 'rb'))
                 await ask_choice(update, context)
             elif score >=0:
                 await query.message.reply_text(
                     "🕊 Ты грешник 0 уровня")
-                path = (os.getcwd() + r'\src\images\sin0.png')
+                path = (os.getcwd() + r'/src/images/sin0.png')
                 await query.message.reply_photo(photo=open(path, 'rb'))
                 await ask_choice(update, context)
         
