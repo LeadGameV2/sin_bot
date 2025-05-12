@@ -279,12 +279,17 @@ async def button_callback(update: Update, context: CallbackContext) -> None:
         selected_option = int(data[1])
 
         user_id = update.effective_chat.id
+        
+        if question_idx < 1:
+            user_scores[user_id] = {"score": 0}
+            
         user_scores[user_id]["score"] += (selected_option)
         await query.delete_message()
 
         # Move to the next question or end the quiz
         next_question_idx = question_idx + 1
         if next_question_idx < len(quiz_questions.QUIZ_QUESTIONS):
+            user_scores[user_id] = {"score": 0}
             await quiz(update, context, next_question_idx)
         else:
             score = user_scores[user_id]["score"]
