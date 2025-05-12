@@ -273,7 +273,7 @@ async def button_callback(update: Update, context: CallbackContext) -> None:
         await create_sin(update, context)
 
     # Checking quiz answers
-    elif  "_" in query.data:
+    elif  "_" in query.data and "page" not in query.data:
         data = query.data.split("_")
         question_idx = int(data[0][1:])
         selected_option = int(data[1])
