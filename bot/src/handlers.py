@@ -297,7 +297,7 @@ async def button_callback(update: Update, context: CallbackContext) -> None:
                     "Но есть шанс… тоненький… как твой roadmap. \n\n"
                     "Напиши свои грехи этому боту — \n"
                     "и, может быть, алгоритмы небесного CI/CD отправят тебе горячий pull request с прощением.")
-                path = (os.getcwd() + r'\src\images\sin10.png')
+                path = (os.getcwd() + r'/src/images/sin10.png')
                 await query.message.reply_photo(photo=open(path, 'rb'))
                 await ask_choice(update, context)
             elif score >=7:
@@ -308,7 +308,7 @@ async def button_callback(update: Update, context: CallbackContext) -> None:
                     "Твоя душа покрыта тёмными пятнами: ты шарил не ту вкладку, ворчал на дизайнеров, а ретроспективу заменил планированием без планов. \n"
                     "И всё же — в тебе есть искра света. Где-то глубоко. Под слоями фич без ресёрча. \n\n"
                     "Напиши свои грехи этому боту — и, быть может, вместо вечного менторства от демона-скрамастера, тебе дадут второй шанс.")
-                path = (os.getcwd() + r'\src\images\sin7.png')
+                path = (os.getcwd() + r'/src/images/sin7.png')
                 await query.message.reply_photo(photo=open(path, 'rb'))
                 await ask_choice(update, context)
             elif score >=3:
@@ -321,7 +321,7 @@ async def button_callback(update: Update, context: CallbackContext) -> None:
                     "Секретики? \n"
                     "Скелеты в шкафу есть и у тебя. \n\n"
                     "Расскажи об этом боту. Он — как продакт: притворится, что не осуждает.")
-                path = (os.getcwd() + r'\src\images\sin3.png')
+                path = (os.getcwd() + r'/src/images/sin3.png')
                 await query.message.reply_photo(photo=open(path, 'rb'))
                 await ask_choice(update, context)
             elif score >=0:
@@ -333,7 +333,7 @@ async def button_callback(update: Update, context: CallbackContext) -> None:
                     "Лик святой. Иди с миром, сын божий продакт-менеджмента. \n"
                     "Но если ты всё же однажды… случайно… поделал отчёт — напиши об этом боту."
                     "Даже святые иногда пушат не в ту ветку.")
-                path = (os.getcwd() + r'\src\images\sin0.png')
+                path = (os.getcwd() + r'/src/images/sin0.png')
                 await query.message.reply_photo(photo=open(path, 'rb'))
                 await ask_choice(update, context)
 
