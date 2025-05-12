@@ -85,7 +85,7 @@ async def ask_choice(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 InlineKeyboardButton("Лучшие грехи 💯", callback_data="top"),
             ],
             [
-                InlineKeyboardButton("Пройти Квиз 🎲", callback_data="quiz"),
+                InlineKeyboardButton("Пройти тест 🎲", callback_data="quiz"),
             ]
         ]
     )
