@@ -3,8 +3,6 @@ from enum import Enum
 
 from telegram import Update
 
-from bot.src.db_handler import db_request
-
 
 class UserStateEnum(str, Enum):
     START = 0
@@ -35,14 +33,7 @@ class UserStates:
         self._user_state[message.effective_chat.id]["sin"] = sin
 
     def get_uuid(self, message: Update) -> int:
-            if "uuid" in self._user_state[message.effective_chat.id]:
-                return self._user_state[message.effective_chat.id]["uuid"]
-            else:
-                q = f"select id from sins.users where chat_id = {message.effective_chat.id}"
-                user_uuid = db_request(q, fetch=True)
-                if user_uuid:
-                    return user_uuid[0][0];
-
+        return self._user_state[message.effective_chat.id]["uuid"]
 
     def update_uuid(self, message: Update, uuid: str):
         self._user_state[message.effective_chat.id]["uuid"] = uuid
